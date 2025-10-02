@@ -20,11 +20,16 @@ def after_request(response):
     response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
     return response
 
-@app.route('/v1', methods=['GET', 'OPTIONS'])
+@app.route('/v1', methods=['GET', 'POST', 'OPTIONS'])
 def v1_root():
-    """V1 API root endpoint"""
+    """V1 API root endpoint - redirects POST to chat completions"""
     if request.method == 'OPTIONS':
         return '', 204
+    
+    # If POST request, treat it as chat completions
+    if request.method == 'POST':
+        return chat_completions()
+    
     return jsonify({
         'message': 'NVIDIA NIM OpenAI-compatible API',
         'endpoints': {
