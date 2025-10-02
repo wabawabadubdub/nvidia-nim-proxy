@@ -12,6 +12,27 @@ CORS(app)
 NVIDIA_API_KEY = os.environ.get('NVIDIA_API_KEY', '')
 NVIDIA_BASE_URL = os.environ.get('NVIDIA_BASE_URL', 'https://integrate.api.nvidia.com/v1')
 
+@app.after_request
+def after_request(response):
+    """Add CORS headers to all responses"""
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
+    return response
+
+@app.route('/v1', methods=['GET', 'OPTIONS'])
+def v1_root():
+    """V1 API root endpoint"""
+    if request.method == 'OPTIONS':
+        return '', 204
+    return jsonify({
+        'message': 'NVIDIA NIM OpenAI-compatible API',
+        'endpoints': {
+            '/v1/chat/completions': 'POST - Chat completions',
+            '/v1/models': 'GET - List models'
+        }
+    })
+
 @app.route('/v1/chat/completions', methods=['POST', 'OPTIONS'])
 def chat_completions():
     if request.method == 'OPTIONS':
@@ -108,9 +129,12 @@ def stream_nvidia_response(payload, headers):
         }
         yield f"data: {json.dumps(error_data)}\n\n"
 
-@app.route('/v1/models', methods=['GET'])
+@app.route('/v1/models', methods=['GET', 'OPTIONS'])
 def list_models():
     """List available models"""
+    if request.method == 'OPTIONS':
+        return '', 204
+        
     try:
         headers = {
             'Authorization': f'Bearer {NVIDIA_API_KEY}'
@@ -131,6 +155,12 @@ def list_models():
                 'data': [
                     {
                         'id': 'meta/llama-3.1-70b-instruct',
+                        'object': 'model',
+                        'created': int(time.time()),
+                        'owned_by': 'nvidia'
+                    },
+                    {
+                        'id': 'deepseek-ai/deepseek-r1',
                         'object': 'model',
                         'created': int(time.time()),
                         'owned_by': 'nvidia'
@@ -161,27 +191,6 @@ def root():
             '/health': 'GET - Health check'
         }
     })
-
-@app.route('/v1', methods=['GET', 'OPTIONS'])
-def v1_root():
-    """V1 API root endpoint"""
-    if request.method == 'OPTIONS':
-        return '', 204
-    return jsonify({
-        'message': 'NVIDIA NIM OpenAI-compatible API',
-        'endpoints': {
-            '/v1/chat/completions': 'POST - Chat completions',
-            '/v1/models': 'GET - List models'
-        }
-    })
-
-@app.after_request
-def after_request(response):
-    """Add CORS headers to all responses"""
-    response.headers.add('Access-Control-Allow-Origin', '*')
-    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
-    response.headers.add('Access-Control-Allow-Methods', 'GET,POST,OPTIONS')
-    return response
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
