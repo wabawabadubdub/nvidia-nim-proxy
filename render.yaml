@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: nvidia-nim-proxy
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn app:app
+    envVars:
+      - key: NVIDIA_API_KEY
+        sync: false
+      - key: NVIDIA_BASE_URL
+        value: https://integrate.api.nvidia.com/v1
+      - key: PORT
+        value: 10000
