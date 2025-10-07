@@ -86,7 +86,7 @@ def chat_completions():
                 f'{NVIDIA_BASE_URL}/chat/completions',
                 headers=headers,
                 json=nvidia_payload,
-                timeout=120
+                timeout=180
             )
             
             if response.status_code == 200:
@@ -116,7 +116,7 @@ def stream_nvidia_response(payload, headers):
             headers=headers,
             json=payload,
             stream=True,
-            timeout=120
+            timeout=180
         )
         
         for line in response.iter_lines():
