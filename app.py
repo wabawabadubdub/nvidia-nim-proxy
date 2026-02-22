@@ -116,7 +116,7 @@ def stream_nvidia_response(payload, headers):
             headers=headers,
             json=payload,
             stream=True,
-            timeout=180
+            timeout=280
         )
         
         for line in response.iter_lines():
